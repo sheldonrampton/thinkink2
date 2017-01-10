@@ -6,7 +6,7 @@
   Drupal.viewsSlideshowXtra = Drupal.viewsSlideshowXtra || {};
   var pageX = 0, pageY = 0, timeout;
   Drupal.viewsSlideshowXtra.transitionBegin = function (options) {
-  	
+
     // Find our views slideshow xtra elements
     $('[id^="views-slideshow-xtra-"]:not(.views-slideshow-xtra-processed)').addClass('views-slideshow-xtra-processed').each(function() {
 
@@ -36,8 +36,6 @@
         for (item in items) {
           //alert('#views-slideshow-xtra-' + options.slideshowID + ' .views-slideshow-xtra-text-' + slideNum + '-' + itemNum);
           $('#views-slideshow-xtra-' + options.slideshowID + ' .views-slideshow-xtra-text-' + slideNum + '-' + itemNum).css({
-            'margin-top': items[item].top,
-            'margin-left': items[item].left,
             'width': slideArea.width()
           });
           itemNum++;
@@ -54,8 +52,6 @@
         for (item in items) {
           //alert('#views-slideshow-xtra-' + options.slideshowID + ' .views-slideshow-xtra-link-' + slideNum + '-' + itemNum);
         	$('#views-slideshow-xtra-' + options.slideshowID + ' .views-slideshow-xtra-link-' + slideNum + '-' + itemNum).css({
-            'margin-top': items[item].top,
-            'margin-left': items[item].left,
             'width': slideArea.width()
           });
           itemNum++;
@@ -72,15 +68,13 @@
         for (item in items) {
           //alert('#views-slideshow-xtra-' + options.slideshowID + ' .views-slideshow-xtra-image-' + slideNum + '-' + itemNum);
         	$('#views-slideshow-xtra-' + options.slideshowID + ' .views-slideshow-xtra-image-' + slideNum + '-' + itemNum).css({
-            'margin-top': items[item].top,
-            'margin-left': items[item].left,
             'width': slideArea.width()
           });
           itemNum++;
         }
         slideNum++;
       }
-      
+
       var settings = Drupal.settings.viewsSlideshowXtra[options.slideshowID];
 	    if (settings.pauseAfterMouseMove) {
 	    //if(true) {
@@ -96,15 +90,15 @@
       	  pageY = e.pageY;
 	    	});
 	    }
-      
+
     });
-    
+
     // TODO Find a better way to detect if xtra module is enabled but this is not
     // an xtra slideshow.  This seems to work but its probably not the right way.
     //if (Drupal.settings.viewsSlideshowXtra[options.slideshowID]) { THIS DOES NOT WORK!
     if ('viewsSlideshowXtra' in Drupal.settings) {
 	    var settings = Drupal.settings.viewsSlideshowXtra[options.slideshowID];
-	
+
 	    // Hide elements either by fading or not
 	    if (settings.displayDelayFade) {
 	      $('#views-slideshow-xtra-' + options.slideshowID + ' .views-slideshow-xtra-row').fadeOut();
@@ -112,15 +106,19 @@
 	    else {
 	      $('#views-slideshow-xtra-' + options.slideshowID + ' .views-slideshow-xtra-row').hide();
 	    }
-	
+
+      settings.currentTransitioningSlide = options.slideNum;
+
 	    // Pause from showing the text and links however long the user decides.
 	    setTimeout(function() {
-	      if (settings.displayDelayFade) {
-	        $('#views-slideshow-xtra-' + options.slideshowID + ' .views-slideshow-xtra-row-' + options.slideNum).fadeIn();
-	      }
-	      else {
-	        $('#views-slideshow-xtra-' + options.slideshowID + ' .views-slideshow-xtra-row-' + options.slideNum).show();
-	      }
+        if (options.slideNum == settings.currentTransitioningSlide) {
+          if (settings.displayDelayFade) {
+            $('#views-slideshow-xtra-' + options.slideshowID + ' .views-slideshow-xtra-row-' + options.slideNum).fadeIn();
+          }
+          else {
+            $('#views-slideshow-xtra-' + options.slideshowID + ' .views-slideshow-xtra-row-' + options.slideNum).show();
+          }
+        }
 	    },
 	    settings.displayDelay
 	    );
@@ -131,4 +129,3 @@
 
 /*
 */
-

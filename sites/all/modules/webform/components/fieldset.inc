@@ -19,6 +19,8 @@ function _webform_defaults_fieldset() {
       'collapsible' => 0,
       'collapsed' => 0,
       'description' => '',
+      'description_above' => FALSE,
+      'private' => FALSE,
     ),
   );
 }
@@ -50,51 +52,50 @@ function _webform_edit_fieldset($component) {
 /**
  * Implements _webform_render_component().
  */
-function _webform_render_fieldset($component, $value = NULL, $filter = TRUE) {
+function _webform_render_fieldset($component, $value = NULL, $filter = TRUE, $submission = NULL) {
+  $node = isset($component['nid']) ? node_load($component['nid']) : NULL;
+
   $element = array(
     '#type' => 'fieldset',
-    '#title' => $filter ? _webform_filter_xss($component['name']) : $component['name'],
+    '#title' => $filter ? webform_filter_xss($component['name']) : $component['name'],
+    '#title_display' => $component['extra']['title_display'] ? $component['extra']['title_display'] : NULL,
     '#weight' => $component['weight'],
-    '#description' => $filter ? _webform_filter_descriptions($component['extra']['description']) : $component['extra']['description'],
+    '#description' => $filter ? webform_filter_descriptions($component['extra']['description'], $node) : $component['extra']['description'],
     '#collapsible' => $component['extra']['collapsible'],
     '#collapsed' => $component['extra']['collapsed'],
-    '#attributes' => array('class' => array('webform-component-fieldset'), 'id' => 'webform-component-' . $component['form_key']),
-    '#pre_render' => array('webform_fieldset_prerender'),
-    '#webform_component' => $component,
+    '#attributes' => array('class' => array('webform-component-fieldset')),
+    '#pre_render' => array('webform_fieldset_prerender', 'webform_element_title_display'),
+    '#translatable' => array('title', 'description'),
   );
-
-  // Hide the fieldset title if #title_display is 'none'.
-  if (!empty($component['extra']['title_display']) && $component['extra']['title_display'] == 'none') {
-    $element['#title'] = NULL;
-  }
 
   return $element;
 }
 
 /**
- * Pre-render function to set a fieldset ID.
+ * Pre-render function to set a unique fieldset class name.
  */
 function webform_fieldset_prerender($element) {
-  $element['#attributes']['id'] = 'webform-component-' . str_replace('_', '-', implode('--', array_slice($element['#parents'], 1)));
+  $element['#id'] = NULL;
+  $element['#attributes']['class'][] = 'webform-component--' . str_replace('_', '-', implode('--', array_slice($element['#parents'], 1)));
   return $element;
 }
 
 /**
  * Implements _webform_display_component().
  */
-function _webform_display_fieldset($component, $value, $format = 'html') {
+function _webform_display_fieldset($component, $value, $format = 'html', $submission = array()) {
   if ($format == 'text') {
     $element = array(
       '#title' => $component['name'],
       '#weight' => $component['weight'],
       '#theme_wrappers' => array('webform_element_text'),
+      '#translatable' => array('title'),
     );
   }
   else {
     $element = _webform_render_fieldset($component, $value);
   }
 
-  $element['#webform_component'] = $component;
   $element['#format'] = $format;
 
   return $element;

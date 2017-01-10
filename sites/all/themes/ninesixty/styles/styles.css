@@ -51,7 +51,7 @@ ul.secondary-menu {
   margin-left: 131px;
   margin-bottom: -35px;
 }
-body { 
+body {
   background-color: #000000;
   color: #fff;
 }
@@ -213,7 +213,7 @@ ul.nice-menu li {
 
 div#footer{
   text-align: center;
-  background-color: #000000; 
+  background-color: #000000;
   height: 30px;
   margin: 0;
   padding: 0;
@@ -356,8 +356,9 @@ label{
 
 .panels-flexible-row-portfolio{
   background-color: #ffffff;
-  width: 693px; 
+  width: 693px;
   margin-top: -32px
+  padding: 0 0 0.5em 0;
 }
 
 .pane-portfolio {
@@ -453,7 +454,7 @@ div#nicemenuko ul.nice-menu {
 
 portfolio_right{
   color: #000000;
- 
+
 }
 
 .views-slideshow-controls-bottom {
@@ -520,14 +521,14 @@ h2 {
 }
 
 table.cc-top {
-  height: 22px; 
-  width: 382px; 
-  margin-left: 100px; 
+  height: 22px;
+  width: 382px;
+  margin-left: 100px;
   margin-bottom: 10px;
 }
 
 table.cc-bottom {
-  width: 577px; 
+  width: 577px;
   height: 22px;
 }
 
@@ -631,3 +632,32 @@ p {
 .pane-node-field-testimonial {
   margin-top: 34px;
 }
+
+.panels-flexible-4 .panels-flexible-region-4-messagebox-inside.panels-flexible-region-inside-last,
+.panels-flexible-4 .panels-flexible-region-4-messagebox-inside.panels-flexible-region-inside-first,
+.panels-flexible-4 .panels-flexible-region-4-messagebox-inside.panels-flexible-region-inside {
+  padding: 0 70px 35px 35px;
+}
+.panels-flexible-4 .panels-flexible-region-4-testimonial-inside.panels-flexible-region-inside-last,
+.panels-flexible-4 .panels-flexible-region-4-testimonial-inside.panels-flexible-region-inside-first,
+.panels-flexible-4 .panels-flexible-region-4-testimonial-inside.panels-flexible-region-inside {
+  padding: 0 30px 35px 35px;
+}
+
+.panels-flexible-4 .panels-flexible-column-4-2 {
+  padding-left: 60px;
+}
+
+.panels-flexible-4 .panels-flexible-column-4-3 {
+  padding-right: 60px;
+}
+
+.panels-flexible-4 .panels-flexible-region-inside .panels-flexible-region-4-testimonial-inside {
+  padding-right: 30px;
+}
+body.page-node-7 .panels-flexible-4 .panels-flexible-region-4-messagebox-inside.panels-flexible-region-inside-last,
+body.page-node-7 .panels-flexible-4 .panels-flexible-region-4-messagebox-inside.panels-flexible-region-inside-first,
+body.page-node-7 .panels-flexible-4 .panels-flexible-region-4-messagebox-inside.panels-flexible-region-inside {
+  padding: 0 75px 35px 0px;
+}
+

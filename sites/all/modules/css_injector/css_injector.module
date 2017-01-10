@@ -47,10 +47,34 @@ function css_injector_help($path, $arg) {
 function css_injector_init() {
   $css_rules = _css_injector_load_rule();
   foreach ($css_rules as $css_rule) {
-    if (_css_injector_evaluate_rule($css_rule)) {
-      $filepath = _css_injector_rule_path($css_rule['crid']);
-      drupal_add_css($filepath, array('type' => 'file', 'group' => CSS_THEME, 'media' => $css_rule['media'], 'preprocess' => $css_rule['preprocess']));
+    if (!isset($css_rule['enabled']) || $css_rule['enabled']) {
+      if (_css_injector_evaluate_rule($css_rule)) {
+        $file_uri = _css_injector_rule_uri($css_rule['crid']);
+        $theme_rules = unserialize($css_rule['rule_themes']);
+        global $theme;
+        if (!is_array($theme_rules) || empty($theme_rules) || in_array($theme, $theme_rules, true)) {
+          switch ($css_rule['media']) {
+            case 'all':
+            case 'screen':
+            case 'print':
+              drupal_add_css($file_uri, array('type' => 'file','group' => CSS_THEME,'media' => $css_rule['media'],'preprocess' => $css_rule['preprocess']));
+              break;
+
+            case 'IE 7':
+            case 'IE 8':
+            case 'IE 9':
+              drupal_add_css($file_uri, array(
+                'group' => CSS_THEME,
+                'browsers' => array('IE' => $css_rule['media'], '!IE' => FALSE),
+                'preprocess' => $css_rule['preprocess'])
+              );
+              break;
+
+          }
+        }
+      }
     }
+
   }
 }
 
@@ -67,9 +91,9 @@ function css_injector_init() {
 function css_injector_css_alter(&$css) {
   $css_rules = _css_injector_load_rule();
   foreach ($css_rules as $css_rule) {
-    $filepath = _css_injector_rule_path($css_rule['crid']);
-    if (!empty($css[$filepath])) {
-      $css[$filepath]['weight'] = 200 + $css_rule['crid'];
+    $file_uri = _css_injector_rule_uri($css_rule['crid']);
+    if (!empty($css[$file_uri])) {
+      $css[$file_uri]['weight'] = 200 + $css_rule['crid'];
     }
   }
 }
@@ -171,7 +195,7 @@ function _css_injector_load_rule($crid = NULL, $reset = FALSE) {
  */
 function _css_injector_delete_rule($crid) {
   if ($rule = _css_injector_load_rule($crid)) {
-    file_unmanaged_delete(_css_injector_rule_path($crid));
+    file_unmanaged_delete(_css_injector_rule_uri($crid));
     db_delete('css_injector_rule')
       ->condition('crid', $crid)
       ->execute();
@@ -216,25 +240,6 @@ function _css_injector_evaluate_rule($css_rule = array()) {
     $page_match = TRUE;
   }
   return $page_match;
-}
-
-/**
- * Helper function to get file path for a rule.
- * This will get the path relative to DRUPAL_ROOT,
- * as in 'sites/default/files/css_injector/css_injector_99.css'.
- *
- * @param $crid
- *   The integer identifying the CSS Rule ID (crid)
- */
-function _css_injector_rule_path($crid) {
-  if (!empty($crid)) {
-    $local_path = drupal_realpath(_css_injector_rule_uri($crid));
-    // Now remove the part before the drupal root.
-    // The +1 gets rid of the leading '/'.
-    $local_path = substr_replace($local_path, '', 0, strlen(DRUPAL_ROOT) + 1);
-    return $local_path;
-  }
-  return NULL;
 }
 
 /**

@@ -78,16 +78,16 @@
                 <?php print render($page['footer']); ?>
      </div>
     <?php endif; ?>
-    
+
         <div id="footer" class="prefix-1 suffix-1">
         <?php print theme('image', array(
           'path' => 'sites/all/themes/ninesixty/images/contact_22.jpg',
           'alt' => '2819 Royal Avenue, Madison, WI 53719 . 608-251-7300 . Fax 608-251-2141 . www.thinkinkanddesign.com',
           'title' => '2819 Royal Avenue, Madison, WI 53719 . 608-251-7300 . Fax 608-251-2141 . www.thinkinkanddesign.com',
         )); ?><br />
-        <p>©2012 Think Ink &amp; Design</p>
-  
-   
+        <p>©2017 Think Ink &amp; Design</p>
+
+
   </div>
     </div>
 

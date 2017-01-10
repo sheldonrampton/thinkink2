@@ -62,6 +62,9 @@ function theme_views_slideshow_xtra_widget_render($vars) {
               	'target' => '',
               );
   
+              // Pre-append top and left values to styles
+              $vsx['styles'] = 'top:' . $vsx['top'] . 'px;' . 'left:' . $vsx['left'] . 'px;' . $vsx['styles'];
+              
               $output .= theme(
               		'views_slideshow_xtra_' . $vsx['type'],
                   array('vss_id' => $vars['vss_id'],
@@ -166,7 +169,7 @@ function template_preprocess_views_slideshow_xtra_link(&$vars) {
 
   // Lightbox
   if ($vars['vsx']['lightbox']) {
-    $vars['vsx']['url'] .= '?width=' . $vars['vsx']['width'] . '&height=' . $vars['vsx']['height'] . '&iframe=true';
+    $vars['url'] .= '?width=' . $vars['vsx']['width'] . '&height=' . $vars['vsx']['height'] . '&iframe=true';
   }
   
 }

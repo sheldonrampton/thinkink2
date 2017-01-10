@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Display suite extras fields.
+ * Display Suite extras fields.
  */
 
 /**
@@ -21,41 +21,33 @@ function ds_extras_ds_fields_info($entity_type) {
     );
   }
 
-  // Fivestar Support.
-  if ($entity_type == 'node' && variable_get('ds_extras_fivestar', FALSE)) {
-
-    $ui_limit = array();
-    $types = node_type_get_names();
-    foreach ($types as $node_type => $name) {
-      $variable = 'fivestar_' . $node_type;
-      $enabled = variable_get('ds_' . $variable, 0);
-      if ($enabled) {
-        $ui_limit[] = $node_type . '|*';
+  // Flag support.
+  if (variable_get('ds_extras_flag') && module_exists('flag')) {
+    if ($entity_type == 'node') {
+      $flags = flag_get_flags('node');
+      foreach ($flags as $name => $flag) {
+        $ui_limit = array();
+        if (!empty($flag->types)) {
+          foreach ($flag->types as $type) {
+            $ui_limit[] = $type . '|*';
+          }
+        }
+        $fields['node']['ds_flag_' . $name] = array(
+          'title' => t('Flag: ' . $flag->get_label('title')),
+          'field_type' => DS_FIELD_TYPE_FUNCTION,
+          'function' => 'ds_extras_flags_add_flag_link',
+          'properties' => array(
+            'flag' => $name,
+          ),
+          'ui_limit' => $ui_limit,
+        );
       }
     }
-
-    $fields[$entity_type]['fivestar_widget'] = array(
-      'title' => t('Fivestar'),
-      'field_type' => DS_FIELD_TYPE_FUNCTION,
-      'function' => 'ds_fivestar_render',
-      'ui_limit' => $ui_limit,
-      'properties' => array(
-        'formatters' => array(
-          'ds_fivestar_clickable' => t('Clickable widget'),
-          'ds_fivestar_static' => t('Static display'),
-        ),
-      )
-    );
   }
 
   // DS Views.
   if ($entity_type == 'ds_views') {
     $fields[$entity_type] = array(
-      'admin_links' => array(
-        'title' => t('Admin links'),
-        'field_type' => DS_FIELD_TYPE_PREPROCESS,
-
-      ),
       'title' => array(
         'title' => t('Views title'),
         'field_type' => DS_FIELD_TYPE_FUNCTION,

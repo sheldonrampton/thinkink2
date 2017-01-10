@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Contains the RSS style plugin.
@@ -56,6 +57,7 @@ class views_plugin_style_rss extends views_plugin_style {
       '#title' => t('RSS description'),
       '#default_value' => $this->options['description'],
       '#description' => t('This will appear in the RSS feed itself.'),
+      '#maxlength' => 1024,
     );
   }
 
@@ -69,20 +71,68 @@ class views_plugin_style_rss extends views_plugin_style {
     return array();
   }
 
+  /**
+   * Return an atom:link XHTML element to add to the channel to comply with
+   * the RSS 2.0 specification.
+   *
+   * @see http://validator.w3.org/feed/docs/warning/MissingAtomSelfLink.html
+   *
+   * @return
+   *   An array that can be passed to format_xml_elements().
+   */
+  function get_channel_elements_atom_link() {
+    $url_options = array('absolute' => TRUE);
+    $input = $this->view->get_exposed_input();
+    if ($input) {
+      $url_options['query'] = $input;
+    }
+    $url = url($this->view->get_url(), $url_options);
+
+    return array(
+      array(
+        'namespace' => array('xmlns:atom' => 'http://www.w3.org/2005/Atom'),
+        'key' => 'atom:link',
+        'attributes' => array(
+          'href' => $url,
+          'rel' => 'self',
+          'type' => 'application/rss+xml',
+        ),
+      ),
+    );
+  }
+
+  /**
+   * Get RSS feed description.
+   *
+   * @return string
+   *   The string containing the description with the tokens replaced.
+   */
+  function get_description() {
+    $description = $this->options['description'];
+
+    // Allow substitutions from the first row.
+    $description = $this->tokenize_value($description, 0);
+
+    return $description;
+  }
+
   function render() {
     if (empty($this->row_plugin)) {
-      debug('views_plugin_style_default: Missing row plugin');
+      vpr('views_plugin_style_default: Missing row plugin');
       return;
     }
     $rows = '';
 
     // This will be filled in by the row plugin and is used later on in the
     // theming output.
-    $this->namespaces = array();
+    $this->namespaces = array('xmlns:dc' => 'http://purl.org/dc/elements/1.1/');
 
     // Fetch any additional elements for the channel and merge in their
     // namespaces.
-    $this->channel_elements = $this->get_channel_elements();
+    $this->channel_elements = array_merge(
+      $this->get_channel_elements(),
+      $this->get_channel_elements_atom_link()
+    );
     foreach ($this->channel_elements as $element) {
       if (isset($element['namespace'])) {
         $this->namespaces = array_merge($this->namespaces, $element['namespace']);

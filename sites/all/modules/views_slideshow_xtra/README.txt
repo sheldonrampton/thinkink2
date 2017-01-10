@@ -1,9 +1,34 @@
 
 README.txt for the Views Slideshow Xtra (VSX) Module 
 
+Important
+=========
+
+If you are implementing this module for the first time, you should use the sub-module 
+called "views_slideshow_xtra_overlay" instead, and not use (and do not enable) the
+views_slideshow_xtra module. The new approach to overlays in views_slideshow_xtra_overlay
+represents a significant improvement, and will be the only approach supported in Drupal 8.
+
+The old views_slideshow_xtra module has been left intact (for now), so that 
+sites currently using the old JSON field approach of views_slideshow_xtra are
+not adversly effected.  The JSON approach was not friendly for less technical themers 
+and content editors.
+
+The new approach creates overlays by creating a Views Attachment Display 
+that has a Style Plugin called "Slideshow Overlay". To get started, read the 
+views_slideshow_xtra_overlay README.txt file, rather than this file.
+
+In Drupal 8, JSON field support will be eliminated, and the module will be restructured,
+with the views_slideshow_xtra main module defining default slideshow Content Types and Views,
+and views_slideshow_xtra_overlay remaining a submodule.
+
+For additional information on then new aproach, see the README.txt file in the
+views_slideshow_xtra_overlay module. 
 
 Overview
 --------
+
+THIS APPROACH HAS BEEN DEPRECATED AND WILL NOT LONGER BE SUPPORTED IN DRUPAL 8.
 
 The Views Slideshow Xtra module provides an easy way to place HTML elements
 (text, links, icons, etc) on top of a Views Slideshow.  The HTML elements are placed in 
@@ -201,6 +226,7 @@ Slideshow Mask
 --------------
 
 (NOT YET SUPPORTED IN D7)
-To put a mask over the slideshow, apply a background image to the div with class 
+To put a mask over the slideshow apply a background image to the div with class 
 ".views-slideshow-xtra-overlay".
+
 

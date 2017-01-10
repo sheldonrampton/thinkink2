@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Display suite fields.
+ * Display Suite fields.
  */
 
 /**
@@ -23,6 +23,10 @@ function ds_ds_fields_info($entity_type) {
         'field_type' => $field->field_type,
         'properties' => $field->properties,
       );
+      if (!empty($field->ui_limit)) {
+        $lines = explode("\n", $field->ui_limit);
+        $fields[$entity_type][$key]['ui_limit'] = $lines;
+      }
     }
   }
 
@@ -36,8 +40,6 @@ function ds_ds_fields_info($entity_type) {
     'field_type' => DS_FIELD_TYPE_FUNCTION,
     'function' => 'ds_render_field',
     'properties' => array(
-      'entity_path' => 'node',
-      'entity_id_key' => 'nid',
       'entity_render_key' => 'title',
       'settings' => array(
         'link' => array('type' => 'select', 'options' => array('no', 'yes')),
@@ -59,7 +61,9 @@ function ds_ds_fields_info($entity_type) {
     $fields['node']['comments'] = array(
       'title' => t('Comments'),
       'field_type' => DS_FIELD_TYPE_IGNORE,
-      'ui_limit' => array('*|default', '*|full'),
+      'ui_limit' => array(
+        '*|full', '*|default',
+      ),
     );
   }
 
@@ -69,14 +73,13 @@ function ds_ds_fields_info($entity_type) {
     'field_type' => DS_FIELD_TYPE_FUNCTION,
     'function' => 'ds_render_field',
     'properties' => array(
-      'entity_path' => 'node',
-      'entity_id_key' => 'nid',
       'settings' => array(
-        'link text' => array('type' => 'textfield', 'options' => array('no', 'yes')),
+        'link text' => array('type' => 'textfield'),
+        'link class' => array('type' => 'textfield', 'description' => t('Put a class on the link. Eg: btn btn-default')),
         'wrapper' => array('type' => 'textfield', 'description' => t('Eg: h1, h2, p')),
         'class' => array('type' => 'textfield', 'description' => t('Put a class on the wrapper. Eg: block-title')),
       ),
-      'default' => array('link text' => 'Read more', 'wrapper' => '', 'class' => '', 'link' => 1),
+      'default' => array('link text' => 'Read more', 'link class' => '', 'wrapper' => '', 'class' => '', 'link' => 1),
     )
   );
 
@@ -105,8 +108,33 @@ function ds_ds_fields_info($entity_type) {
     'function' => 'ds_render_date_field',
     'properties' => array(
       'formatters' => $date_formatters,
+      'entity_render_key' => 'created',
     ),
   );
+
+  // Updated time.
+  $fields['node']['changed_date'] = array(
+    'title' => t('Last modified'),
+    'field_type' => DS_FIELD_TYPE_FUNCTION,
+    'function' => 'ds_render_date_field',
+    'properties' => array(
+      'formatters' => $date_formatters,
+      'entity_render_key' => 'changed',
+    ),
+  );
+
+  // "Submitted by"-line. Skip this if the "Submitted By" module is used.
+  if (!module_exists('submitted_by')) {
+    $date_formatters = array('ds_time_ago' => t('Time ago')) + $date_formatters;
+    $fields['node']['submitted_by'] = array(
+      'title' => t('Submitted by'),
+      'field_type' => DS_FIELD_TYPE_FUNCTION,
+      'function' => 'ds_render_submitted_by',
+      'properties' => array(
+        'formatters' => $date_formatters,
+      ),
+    );
+  }
 
   // User picture
   if (variable_get('user_pictures', 0)) {
@@ -181,6 +209,7 @@ function ds_ds_fields_info($entity_type) {
       'function' => 'ds_render_date_field',
       'properties' => array(
         'formatters' => $date_formatters,
+        'entity_render_key' => 'created',
       ),
     );
 
@@ -251,12 +280,10 @@ function ds_ds_fields_info($entity_type) {
 
   // Username
   $fields['user']['name'] = array(
-    'title' => 'Username',
+    'title' => t('Username'),
     'field_type' => DS_FIELD_TYPE_FUNCTION,
     'function' => 'ds_render_field',
     'properties' => array(
-      'entity_path' => 'user',
-      'entity_id_key' => 'uid',
       'entity_render_key' => 'name',
       'settings' => array(
         'link' => array('type' => 'select', 'options' => array('no', 'yes')),
@@ -319,9 +346,61 @@ function ds_ds_fields_info($entity_type) {
       'field_type' => DS_FIELD_TYPE_FUNCTION,
       'function' => 'ds_render_field',
       'properties' => array(
-        'entity_path' => 'taxonomy/term',
-        'entity_id_key' => 'tid',
         'entity_render_key' => 'name',
+        'settings' => array(
+          'link' => array('type' => 'select', 'options' => array('no', 'yes')),
+          'wrapper' => array('type' => 'textfield', 'description' => t('Eg: h1, h2, p')),
+          'class' => array('type' => 'textfield', 'description' => t('Put a class on the wrapper. Eg: block-title')),
+        ),
+        'default' => array('wrapper' => 'h2', 'link' => 0, 'class' => ''),
+      )
+    );
+
+    // Taxonomy term link.
+    $fields['taxonomy_term']['more_link'] = array(
+      'title' => t('Read more'),
+      'field_type' => DS_FIELD_TYPE_FUNCTION,
+      'function' => 'ds_render_field',
+      'properties' => array(
+        'settings' => array(
+          'link text' => array('type' => 'textfield'),
+          'wrapper' => array('type' => 'textfield', 'description' => t('Eg: h1, h2, p')),
+          'class' => array('type' => 'textfield', 'description' => t('Put a class on the wrapper. Eg: block-title')),
+        ),
+        'default' => array('link text' => 'Read more', 'wrapper' => '', 'class' => '', 'link' => 1),
+      )
+    );
+  }
+
+  // Support for ECK Entity title
+  if (module_exists('eck')) {
+    $entity_info = entity_get_info($entity_type);
+    if (isset($entity_info['module']) && $entity_info['module'] == 'eck') {
+      $fields[$entity_type]['title'] = array(
+        'title' => t('Title'),
+        'field_type' => DS_FIELD_TYPE_FUNCTION,
+        'function' => 'ds_render_field',
+        'properties' => array(
+          'entity_render_key' => 'title',
+          'settings' => array(
+            'link' => array('type' => 'select', 'options' => array('no', 'yes')),
+            'wrapper' => array('type' => 'textfield', 'description' => t('Eg: h1, h2, p')),
+            'class' => array('type' => 'textfield', 'description' => t('Put a class on the wrapper. Eg: block-title')),
+          ),
+          'default' => array('wrapper' => 'h2', 'link' => 0, 'class' => ''),
+        )
+      );
+    }
+  }
+
+  // Support for fieldable panels panes.
+  if (module_exists('fieldable_panels_panes')) {
+    $fields['fieldable_panels_pane']['title_ds'] = array(
+      'title' => t('Display Suite Title'),
+      'field_type' => DS_FIELD_TYPE_FUNCTION,
+      'function' => 'ds_render_field',
+      'properties' => array(
+        'entity_render_key' => 'title',
         'settings' => array(
           'link' => array('type' => 'select', 'options' => array('no', 'yes')),
           'wrapper' => array('type' => 'textfield', 'description' => t('Eg: h1, h2, p')),

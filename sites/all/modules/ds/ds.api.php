@@ -20,16 +20,16 @@ function hook_test_ctools_plugin_api($module, $api) {
 }
 
 /**
- * Expose Display suite field settings.
+ * Expose Display Suite field settings.
  *
  * This hook is called by CTools. For this hook to work, you need
  * hook_ctools_plugin_api(). The values of this hook can be overridden
  * and reverted through the UI.
  */
 function hook_ds_field_settings_info() {
-  $ds_fieldsettings = array();
+  $dsfieldsettings = array();
 
-  $ds_fieldsetting = new stdClass;
+  $dsfieldsetting = new stdClass;
   $dsfieldsetting->disabled = FALSE; /* Edit this to true to make a default dsfieldsetting disabled initially */
   $dsfieldsetting->api_version = 1;
   $dsfieldsetting->id = 'node|article|default';
@@ -172,7 +172,11 @@ function hook_ds_fields_info($entity_type) {
     // properties: can have different keys.
     'properties' => array(
 
-      // formatters: optional if a a function is used.
+      // formatters: optional if a function is used.
+      // In case the field_type is DS_FIELD_TYPE_THEME, you also
+      // need to register these formatters as a theming function
+      // since the key will be called with theme('function').
+      // The value is the caption used in the selection config on Field UI.
       'formatters' => array(
         'node_title_nolink_h1' => t('H1 title'),
         'node_title_link_h1' => t('H1 title, linked to node'),
@@ -192,10 +196,13 @@ function hook_ds_fields_info($entity_type) {
       'use_token' => TRUE, // or FALSE,
 
       // block: the module and delta of the block, only for block fields.
-      'block' => 'user-menu',
+      //
+      // @note: Display Suite uses a "|" token to split the module from
+      // the delta.
+      'block' => 'user|menu',
 
       // block_render: block render type, only for block fields.
-      // - DS_BLOCK_CONTENT       : render through block template file.
+      // - DS_BLOCK_TEMPLATE      : render through block template file.
       // - DS_BLOCK_TITLE_CONTENT : render only title and content.
       // - DS_BLOCK_CONTENT       : render only content.
       'block_render' => DS_BLOCK_CONTENT,
@@ -232,9 +239,9 @@ function hook_ds_custom_fields_info() {
   $ds_field->entities = array(
     'node' => 'node',
   );
-  $ds_field->properties = (object) array(
+  $ds_field->properties = array(
     'code' => array(
-      'value' => '<? print "this is a custom field"; ?>',
+      'value' => '<?php print "this is a custom field"; ?>',
       'format' => 'ds_code',
     ),
     'use_token' => 0,
@@ -264,7 +271,9 @@ function hook_ds_vd_info() {
 }
 
 /**
- * Alter fields defined by Display Suite
+ * Alter fields defined by Display Suite.
+ *
+ * This function is called for each entity type.
  *
  * @param $fields
  *   An array with fields which can be altered just before they get cached.
@@ -278,20 +287,40 @@ function hook_ds_fields_info_alter(&$fields, $entity_type) {
 }
 
 /**
+ * Alter fields defined by Display Suite just before they get
+ * rendered on the Field UI. Use this hook to inject fields
+ * which you can't alter with hook_ds_fields_info_alter().
+ *
+ * Use this in edge cases, see ds_extras_ds_fields_ui_alter()
+ * which adds fields chosen in Views UI. This also runs
+ * when a layout has been chosen.
+ *
+ * @param $fields
+ *   An array with fields which can be altered just before they get cached.
+ * @param $entity_type
+ *   The name of the entity type.
+ */
+function hook_ds_fields_ui_alter(&$fields, $context) {
+  $fields['title'] = t('Extra title');
+}
+
+/**
  * Define theme functions for fields.
  *
  * This only is necessary when you're using the field settings
- * plugin which comes with the DS extras module. This function
- * will call the theming functions directly, not through
- * theme('function', $variables); A function gets 2 parameters,
- * the $variables and $config which are the configuration options
- * for the current field: theme_ds_field_custom($variables, $config);
+ * plugin which comes with the DS extras module and you want to
+ * expose a special field theming function to the interface.
+ *
+ * The theme function gets $variables as the only parameter.
+ * The optional configuration through the UI is in $variables['ds-config'].
+ *
+ * Note that 'theme_ds_field_' is always needed, so the suggestions can work.
  *
  * @return $field_theme_functions
  *   A collection of field theming functions.
  */
 function hook_ds_field_theme_functions_info() {
-  return array('theme_field' => t('Theme field'));
+  return array('theme_ds_field_mine' => t('Theme field'));
 }
 
 /**
@@ -377,10 +406,31 @@ function hook_ds_layout_info() {
         'foo_content' => t('Content'),
       ),
       'css' => TRUE,
+      // optional, form only applies to node form at this point.
+      'form' => TRUE,
     ),
   );
 
   return $layouts;
+}
+
+/**
+ * Alter the layout render array.
+ *
+ * @param $layout_render_array
+ *   The render array
+ * @param $context
+ *   An array with the context that is being rendered. Available keys are
+ *   - entity
+ *   - entity_type
+ *   - bundle
+ *   - view_mode
+ * @param array $vars
+ *   All variables available for render. You can use this to add css classes.
+ */
+function hook_ds_pre_render_alter(&$layout_render_array, $context, &$vars) {
+  $layout_render_array['left'][] = array('#markup' => 'cool!', '#weight' => 20);
+  $vars['attributes_array']['class'][] = 'custom';
 }
 
 /**
@@ -457,10 +507,30 @@ function hook_ds_label_options_alter(&$field_label_options) {
       ),
       // Add this if there is a default css file.
       'css' => TRUE,
+      // Add this if there is a default preview image
+      'image' => TRUE,
     );
   }
 
  */
+
+/**
+ * Alter the view mode just before it's rendered by the DS views entity plugin.
+ *
+ * @param $view_mode
+ *   The name of the view mode.
+ * @param $context
+ *   A collection of items which can be used to identify in what
+ *   context an entity is being rendered. The variable contains 3 keys:
+ *     - entity: The entity being rendered.
+ *     - view_name: the name of the view.
+ *     - display: the name of the display of the view.
+ */
+function hook_ds_views_view_mode_alter(&$view_mode, $context) {
+  if ($context['view_name'] == 'my_view_name') {
+    $view_mode = 'new_view_mode';
+  }
+}
 
 /**
  * Theme an entity coming from the views entity plugin.
@@ -473,7 +543,8 @@ function hook_ds_label_options_alter(&$field_label_options) {
 function ds_views_row_ENTITY_NAME($entity, $view_mode) {
   $nid = $vars['row']->{$vars['field_alias']};
   $node = node_load($nid);
-  return drupal_render(node_view($node, $view_mode));
+  $element = node_view($node, $view_mode);
+  return drupal_render($element);
 }
 
 /**
@@ -490,5 +561,61 @@ function ds_views_row_adv_VIEWS_NAME(&$vars, $view_mode) {
 }
 
 /**
+ * Modify the entity render array in the context of a view.
+ *
+ * @param array $content
+ *   By reference. An entity view render array.
+ * @param array $context
+ *   By reference. An associative array containing:
+ *   - row: The current active row object being rendered.
+ *   - view: By reference. The current view object.
+ *   - view_mode: The view mode which is set in the Views' options.
+ *   - load_comments: The same param passed to each row function.
+ *
+ * @see ds_views_row_render_entity()
+ */
+function hook_ds_views_row_render_entity_alter(&$content, &$context) {
+  if ($context['view_mode'] == 'my_mode') {
+    // Modify the view, or the content render array in the context of a view.
+    $view = &$context['view'];
+    $element = &drupal_array_get_nested_value($content, array('field_example', 0));
+  }
+}
+
+/**
+ * Alter the strings used to separate taxonomy terms.
+ */
+function hook_ds_taxonomy_term_separators(&$separators) {
+  // Remove the option to use a hyphen.
+  unset($separators[' - ']);
+  // Add the option to use a pipe.
+  $separators[' | '] = t('pipe');
+}
+
+/**
+ * Allow modules to provide additional classes for regions and layouts.
+ */
+function hook_ds_classes_alter(&$classes, $name) {
+  if ('ds_classes_regions' === $name) {
+    $classes['css-class-name'] = t('Custom Styling');
+  }
+}
+
+/**
+ * Alter the field template settings form
+ *
+ * @param array $form
+ *   The form containing the field settings
+ * @param array $field_settings
+ *   The settings of the field
+ */
+function hook_ds_field_theme_functions_settings_alter(&$form, $field_settings) {
+  $form['something'] = array(
+    '#type' => 'textfield',
+    '#title' => 'test',
+  );
+}
+
+/*
  * @} End of "addtogroup hooks".
  */
