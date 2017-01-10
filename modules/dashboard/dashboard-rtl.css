@@ -1,4 +1,7 @@
-/* $Id */
+/**
+ * @file
+ * Right-to-left specific stylesheet for the Dashboard module.
+ */
 
 #dashboard div.dashboard-region {
   float: right;

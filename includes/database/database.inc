@@ -28,20 +28,23 @@
  * Most Drupal database SELECT queries are performed by a call to db_query() or
  * db_query_range(). Module authors should also consider using the PagerDefault
  * Extender for queries that return results that need to be presented on
- * multiple pages, and the Tablesort Extender for generating appropriate queries
- * for sortable tables.
+ * multiple pages (see https://drupal.org/node/508796), and the TableSort
+ * Extender for generating appropriate queries for sortable tables
+ * (see https://drupal.org/node/1848372).
  *
  * For example, one might wish to return a list of the most recent 10 nodes
  * authored by a given user. Instead of directly issuing the SQL query
  * @code
- * SELECT n.nid, n.title, n.created FROM node n WHERE n.uid = $uid LIMIT 0, 10;
+ * SELECT n.nid, n.title, n.created FROM node n WHERE n.uid = $uid
+ *   ORDER BY n.created DESC LIMIT 0, 10;
  * @endcode
  * one would instead call the Drupal functions:
  * @code
  * $result = db_query_range('SELECT n.nid, n.title, n.created
- *   FROM {node} n WHERE n.uid = :uid', 0, 10, array(':uid' => $uid));
+ *   FROM {node} n WHERE n.uid = :uid
+ *   ORDER BY n.created DESC', 0, 10, array(':uid' => $uid));
  * foreach ($result as $record) {
- *   // Perform operations on $node->title, etc. here.
+ *   // Perform operations on $record->title, etc. here.
  * }
  * @endcode
  * Curly braces are used around "node" to provide table prefixing via
@@ -152,7 +155,7 @@
  *   }
  *
  *   // $txn goes out of scope here.  Unless the transaction was rolled back, it
- *   // gets automatically commited here.
+ *   // gets automatically committed here.
  * }
  *
  * function my_other_function($id) {
@@ -167,7 +170,7 @@
  * }
  * @endcode
  *
- * @link http://drupal.org/developing/api/database
+ * @see http://drupal.org/developing/api/database
  */
 
 
@@ -179,7 +182,7 @@
  * concrete implementation of it to support special handling required by that
  * database.
  *
- * @see http://php.net/manual/en/book.pdo.php
+ * @see http://php.net/manual/book.pdo.php
  */
 abstract class DatabaseConnection extends PDO {
 
@@ -194,7 +197,7 @@ abstract class DatabaseConnection extends PDO {
 
   /**
    * The key representing this connection.
-   * 
+   *
    * The key is a unique string which identifies a database connection. A
    * connection can be a single server or a cluster of master and slaves (use
    * target to pick between master and slave).
@@ -273,20 +276,39 @@ abstract class DatabaseConnection extends PDO {
   protected $schema = NULL;
 
   /**
-   * The default prefix used by this database connection.
-   *
-   * Separated from the other prefixes for performance reasons.
-   *
-   * @var string
-   */
-  protected $defaultPrefix = '';
-
-  /**
-   * The non-default prefixes used by this database connection.
+   * The prefixes used by this database connection.
    *
    * @var array
    */
   protected $prefixes = array();
+
+  /**
+   * List of search values for use in prefixTables().
+   *
+   * @var array
+   */
+  protected $prefixSearch = array();
+
+  /**
+   * List of replacement values for use in prefixTables().
+   *
+   * @var array
+   */
+  protected $prefixReplace = array();
+
+  /**
+   * List of escaped database, table, and field names, keyed by unescaped names.
+   *
+   * @var array
+   */
+  protected $escapedNames = array();
+
+  /**
+   * List of escaped aliases names, keyed by unescaped aliases.
+   *
+   * @var array
+   */
+  protected $escapedAliases = array();
 
   function __construct($dsn, $username, $password, $driver_options = array()) {
     // Initialize and prepare the connection prefix.
@@ -298,10 +320,26 @@ abstract class DatabaseConnection extends PDO {
     // Call PDO::__construct and PDO::setAttribute.
     parent::__construct($dsn, $username, $password, $driver_options);
 
-    // Set a specific PDOStatement class if the driver requires that.
+    // Set a Statement class, unless the driver opted out.
     if (!empty($this->statementClass)) {
       $this->setAttribute(PDO::ATTR_STATEMENT_CLASS, array($this->statementClass, array($this)));
     }
+  }
+
+  /**
+   * Destroys this Connection object.
+   *
+   * PHP does not destruct an object if it is still referenced in other
+   * variables. In case of PDO database connection objects, PHP only closes the
+   * connection when the PDO object is destructed, so any references to this
+   * object may cause the number of maximum allowed connections to be exceeded.
+   */
+  public function destroy() {
+    // Destroy all references to this connection by setting them to NULL.
+    // The Statement class attribute only accepts a new value that presents a
+    // proper callable, so we reset it to PDOStatement.
+    $this->setAttribute(PDO::ATTR_STATEMENT_CLASS, array('PDOStatement', array()));
+    $this->schema = NULL;
   }
 
   /**
@@ -375,7 +413,7 @@ abstract class DatabaseConnection extends PDO {
   }
 
   /**
-   * Preprocess the prefixes used by this database connection.
+   * Set the list of prefixes used by this database connection.
    *
    * @param $prefix
    *   The prefixes, in any of the multiple forms documented in
@@ -383,14 +421,27 @@ abstract class DatabaseConnection extends PDO {
    */
   protected function setPrefix($prefix) {
     if (is_array($prefix)) {
-      $this->defaultPrefix = isset($prefix['default']) ? $prefix['default'] : '';
-      unset($prefix['default']);
-      $this->prefixes = $prefix;
+      $this->prefixes = $prefix + array('default' => '');
     }
     else {
-      $this->defaultPrefix = $prefix;
-      $this->prefixes = array();
+      $this->prefixes = array('default' => $prefix);
     }
+
+    // Set up variables for use in prefixTables(). Replace table-specific
+    // prefixes first.
+    $this->prefixSearch = array();
+    $this->prefixReplace = array();
+    foreach ($this->prefixes as $key => $val) {
+      if ($key != 'default') {
+        $this->prefixSearch[] = '{' . $key . '}';
+        $this->prefixReplace[] = $val . $key;
+      }
+    }
+    // Then replace remaining tables with the default prefix.
+    $this->prefixSearch[] = '{';
+    $this->prefixReplace[] = $this->prefixes['default'];
+    $this->prefixSearch[] = '}';
+    $this->prefixReplace[] = '';
   }
 
   /**
@@ -408,12 +459,7 @@ abstract class DatabaseConnection extends PDO {
    *   The properly-prefixed string.
    */
   public function prefixTables($sql) {
-    // Replace specific table prefixes first.
-    foreach ($this->prefixes as $key => $val) {
-      $sql = strtr($sql, array('{' . $key . '}' => $val . $key));
-    }
-    // Then replace remaining tables with the default prefix.
-    return strtr($sql, array('{' => $this->defaultPrefix , '}' => ''));
+    return str_replace($this->prefixSearch, $this->prefixReplace, $sql);
   }
 
   /**
@@ -427,7 +473,7 @@ abstract class DatabaseConnection extends PDO {
       return $this->prefixes[$table];
     }
     else {
-      return $this->defaultPrefix;
+      return $this->prefixes['default'];
     }
   }
 
@@ -594,7 +640,7 @@ abstract class DatabaseConnection extends PDO {
    *   A sanitized version of the query comment string.
    */
   protected function filterComment($comment = '') {
-    return preg_replace('/(\/\*\s*)|(\s*\*\/)/', '', $comment);
+    return strtr($comment, array('*' => ' * '));
   }
 
   /**
@@ -624,7 +670,7 @@ abstract class DatabaseConnection extends PDO {
    * @return DatabaseStatementInterface
    *   This method will return one of: the executed statement, the number of
    *   rows affected by the query (not the number matched), or the generated
-   *   insert IT of the last query, depending on the value of
+   *   insert ID of the last query, depending on the value of
    *   $options['return']. Typically that value will be set by default or a
    *   query builder and should not be set by a user. If there is an error,
    *   this method will return NULL and may throw an exception if
@@ -704,7 +750,7 @@ abstract class DatabaseConnection extends PDO {
     // to expand it out into a comma-delimited set of placeholders.
     foreach (array_filter($args, 'is_array') as $key => $data) {
       $new_keys = array();
-      foreach ($data as $i => $value) {
+      foreach (array_values($data) as $i => $value) {
         // This assumes that there are no other placeholders that use the same
         // name.  For example, if the array placeholder is defined as :example
         // and there is already an :example_2 placeholder, this will generate
@@ -887,11 +933,14 @@ abstract class DatabaseConnection extends PDO {
    * For some database drivers, it may also wrap the table name in
    * database-specific escape characters.
    *
-   * @return
+   * @return string
    *   The sanitized table name string.
    */
   public function escapeTable($table) {
-    return preg_replace('/[^A-Za-z0-9_.]+/', '', $table);
+    if (!isset($this->escapedNames[$table])) {
+      $this->escapedNames[$table] = preg_replace('/[^A-Za-z0-9_.]+/', '', $table);
+    }
+    return $this->escapedNames[$table];
   }
 
   /**
@@ -901,11 +950,14 @@ abstract class DatabaseConnection extends PDO {
    * For some database drivers, it may also wrap the field name in
    * database-specific escape characters.
    *
-   * @return
+   * @return string
    *   The sanitized field name string.
    */
   public function escapeField($field) {
-    return preg_replace('/[^A-Za-z0-9_.]+/', '', $field);
+    if (!isset($this->escapedNames[$field])) {
+      $this->escapedNames[$field] = preg_replace('/[^A-Za-z0-9_.]+/', '', $field);
+    }
+    return $this->escapedNames[$field];
   }
 
   /**
@@ -916,11 +968,14 @@ abstract class DatabaseConnection extends PDO {
    * DatabaseConnection::escapeTable(), this doesn't allow the period (".")
    * because that is not allowed in aliases.
    *
-   * @return
+   * @return string
    *   The sanitized field name string.
    */
   public function escapeAlias($field) {
-    return preg_replace('/[^A-Za-z0-9_]+/', '', $field);
+    if (!isset($this->escapedAliases[$field])) {
+      $this->escapedAliases[$field] = preg_replace('/[^A-Za-z0-9_]+/', '', $field);
+    }
+    return $this->escapedAliases[$field];
   }
 
   /**
@@ -975,6 +1030,9 @@ abstract class DatabaseConnection extends PDO {
    * @param $name
    *   Optional name of the savepoint.
    *
+   * @return DatabaseTransaction
+   *   A DatabaseTransaction object.
+   *
    * @see DatabaseTransaction
    */
   public function startTransaction($name = '') {
@@ -1003,13 +1061,15 @@ abstract class DatabaseConnection extends PDO {
       throw new DatabaseTransactionNoActiveException();
     }
     // A previous rollback to an earlier savepoint may mean that the savepoint
-    // in question has already been rolled back.
-    if (!in_array($savepoint_name, $this->transactionLayers)) {
-      return;
+    // in question has already been accidentally committed.
+    if (!isset($this->transactionLayers[$savepoint_name])) {
+      throw new DatabaseTransactionNoActiveException();
     }
 
     // We need to find the point we're rolling back to, all other savepoints
-    // before are no longer needed.
+    // before are no longer needed. If we rolled back other active savepoints,
+    // we need to throw an exception.
+    $rolled_back_other_active_savepoints = FALSE;
     while ($savepoint = array_pop($this->transactionLayers)) {
       if ($savepoint == $savepoint_name) {
         // If it is the last the transaction in the stack, then it is not a
@@ -1019,10 +1079,20 @@ abstract class DatabaseConnection extends PDO {
           break;
         }
         $this->query('ROLLBACK TO SAVEPOINT ' . $savepoint);
+        $this->popCommittableTransactions();
+        if ($rolled_back_other_active_savepoints) {
+          throw new DatabaseTransactionOutOfOrderException();
+        }
         return;
+      }
+      else {
+        $rolled_back_other_active_savepoints = TRUE;
       }
     }
     parent::rollBack();
+    if ($rolled_back_other_active_savepoints) {
+      throw new DatabaseTransactionOutOfOrderException();
+    }
   }
 
   /**
@@ -1071,15 +1141,32 @@ abstract class DatabaseConnection extends PDO {
     if (!$this->supportsTransactions()) {
       return;
     }
-    if (!$this->inTransaction()) {
-      throw new DatabaseTransactionNoActiveException();
+    // The transaction has already been committed earlier. There is nothing we
+    // need to do. If this transaction was part of an earlier out-of-order
+    // rollback, an exception would already have been thrown by
+    // Database::rollback().
+    if (!isset($this->transactionLayers[$name])) {
+      return;
     }
 
-    // Commit everything since SAVEPOINT $name.
-    while($savepoint = array_pop($this->transactionLayers)) {
-      if ($savepoint != $name) continue;
+    // Mark this layer as committable.
+    $this->transactionLayers[$name] = FALSE;
+    $this->popCommittableTransactions();
+  }
+
+  /**
+   * Internal function: commit all the transaction layers that can commit.
+   */
+  protected function popCommittableTransactions() {
+    // Commit all the committable layers.
+    foreach (array_reverse($this->transactionLayers) as $name => $active) {
+      // Stop once we found an active transaction.
+      if ($active) {
+        break;
+      }
 
       // If there are no more layers left then we should commit.
+      unset($this->transactionLayers[$name]);
       if (empty($this->transactionLayers)) {
         if (!parent::commit()) {
           throw new DatabaseTransactionCommitFailedException();
@@ -1087,7 +1174,6 @@ abstract class DatabaseConnection extends PDO {
       }
       else {
         $this->query('RELEASE SAVEPOINT ' . $name);
-        break;
       }
     }
   }
@@ -1250,6 +1336,39 @@ abstract class DatabaseConnection extends PDO {
    *   also larger than the $existing_id if one was passed in.
    */
   abstract public function nextId($existing_id = 0);
+
+  /**
+   * Checks whether utf8mb4 support is configurable in settings.php.
+   *
+   * @return bool
+   */
+  public function utf8mb4IsConfigurable() {
+    // Since 4 byte UTF-8 is not supported by default, there is nothing to
+    // configure.
+    return FALSE;
+  }
+
+  /**
+   * Checks whether utf8mb4 support is currently active.
+   *
+   * @return bool
+   */
+  public function utf8mb4IsActive() {
+    // Since 4 byte UTF-8 is not supported by default, there is nothing to
+    // activate.
+    return FALSE;
+  }
+
+  /**
+   * Checks whether utf8mb4 support is available on the current database system.
+   *
+   * @return bool
+   */
+  public function utf8mb4IsSupported() {
+    // By default we assume that the database backend may not support 4 byte
+    // UTF-8.
+    return FALSE;
+  }
 }
 
 /**
@@ -1388,9 +1507,6 @@ abstract class Database {
 
   /**
    * Gets the connection object for the specified database key and target.
-   *
-   * Note: do not use the setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE) on the
-   * returned object because of http://bugs.php.net/bug.php?id=43139.
    *
    * @param $target
    *   The database target name.
@@ -1586,8 +1702,8 @@ abstract class Database {
    */
   final public static function removeConnection($key) {
     if (isset(self::$databaseInfo[$key])) {
+      self::closeConnection(NULL, $key);
       unset(self::$databaseInfo[$key]);
-      unset(self::$connections[$key]);
       return TRUE;
     }
     else {
@@ -1653,11 +1769,24 @@ abstract class Database {
     if (!isset($key)) {
       $key = self::$activeKey;
     }
-    // To close the connection, we need to unset the static variable.
+    // To close a connection, it needs to be set to NULL and removed from the
+    // static variable. In all cases, closeConnection() might be called for a
+    // connection that was not opened yet, in which case the key is not defined
+    // yet and we just ensure that the connection key is undefined.
     if (isset($target)) {
+      if (isset(self::$connections[$key][$target])) {
+        self::$connections[$key][$target]->destroy();
+        self::$connections[$key][$target] = NULL;
+      }
       unset(self::$connections[$key][$target]);
     }
     else {
+      if (isset(self::$connections[$key])) {
+        foreach (self::$connections[$key] as $target => $connection) {
+          self::$connections[$key][$target]->destroy();
+          self::$connections[$key][$target] = NULL;
+        }
+      }
       unset(self::$connections[$key]);
     }
   }
@@ -1730,6 +1859,11 @@ class DatabaseTransactionCommitFailedException extends Exception { }
  * Code should never call this method directly.
  */
 class DatabaseTransactionExplicitCommitNotAllowedException extends Exception { }
+
+/**
+ * Exception thrown when a rollback() resulted in other active transactions being rolled-back.
+ */
+class DatabaseTransactionOutOfOrderException extends Exception { }
 
 /**
  * Exception thrown for merge queries that do not make semantic sense.
@@ -1806,8 +1940,8 @@ class DatabaseTransaction {
    */
   protected $name;
 
-  public function __construct(DatabaseConnection &$connection, $name = NULL) {
-    $this->connection = &$connection;
+  public function __construct(DatabaseConnection $connection, $name = NULL) {
+    $this->connection = $connection;
     // If there is no transaction depth, then no transaction has started. Name
     // the transaction 'drupal_transaction'.
     if (!$depth = $connection->transactionDepth()) {
@@ -1826,7 +1960,7 @@ class DatabaseTransaction {
 
   public function __destruct() {
     // If we rolled back then the transaction would have already been popped.
-    if ($this->connection->inTransaction() && !$this->rolledBack) {
+    if (!$this->rolledBack) {
       $this->connection->popTransaction($this->name);
     }
   }
@@ -1857,21 +1991,19 @@ class DatabaseTransaction {
 }
 
 /**
- * A prepared statement.
+ * Represents a prepared statement.
  *
- * Some methods in that class are purposely commented out. Due to a change in
+ * Some methods in that class are purposefully commented out. Due to a change in
  * how PHP defines PDOStatement, we can't define a signature for those methods
  * that will work the same way between versions older than 5.2.6 and later
- * versions.
- *
- * Please refer to http://bugs.php.net/bug.php?id=42452 for more details.
+ * versions.  See http://bugs.php.net/bug.php?id=42452 for more details.
  *
  * Child implementations should either extend PDOStatement:
  * @code
  * class DatabaseStatement_oracle extends PDOStatement implements DatabaseStatementInterface {}
  * @endcode
- * or implement their own class, but in that case they will also have to
- * implement the Iterator or IteratorArray interfaces before
+ * or define their own class. If defining their own class, they will also have
+ * to implement either the Iterator or IteratorAggregate interface before
  * DatabaseStatementInterface:
  * @code
  * class DatabaseStatement_oracle implements Iterator, DatabaseStatementInterface {}
@@ -1913,7 +2045,7 @@ interface DatabaseStatementInterface extends Traversable {
   /**
    * Sets the default fetch mode for this statement.
    *
-   * See http://php.net/manual/en/pdo.constants.php for the definition of the
+   * See http://php.net/manual/pdo.constants.php for the definition of the
    * constants used.
    *
    * @param $mode
@@ -1932,7 +2064,7 @@ interface DatabaseStatementInterface extends Traversable {
   /**
    * Fetches the next row from a result set.
    *
-   * See http://php.net/manual/en/pdo.constants.php for the definition of the
+   * See http://php.net/manual/pdo.constants.php for the definition of the
    * constants used.
    *
    * @param $mode
@@ -1955,7 +2087,7 @@ interface DatabaseStatementInterface extends Traversable {
    *   The numeric index of the field to return. Defaults to the first field.
    *
    * @return
-   *   A single field from the next record.
+   *   A single field from the next record, or FALSE if there is no next record.
    */
   public function fetchField($index = 0);
 
@@ -1975,7 +2107,7 @@ interface DatabaseStatementInterface extends Traversable {
    * helper method, so one is added.
    *
    * @return
-   *   An associative array.
+   *   An associative array, or FALSE if there is no next row.
    */
   public function fetchAssoc();
 
@@ -2003,7 +2135,7 @@ interface DatabaseStatementInterface extends Traversable {
    *   The index of the column number to fetch.
    *
    * @return
-   *   An indexed array.
+   *   An indexed array, or an empty array if there is no result set.
    */
   public function fetchCol($index = 0);
 
@@ -2023,7 +2155,7 @@ interface DatabaseStatementInterface extends Traversable {
    *   The numeric index of the field to use as the array value.
    *
    * @return
-   *   An associative array.
+   *   An associative array, or an empty array if there is no result set.
    */
   public function fetchAllKeyed($key_index = 0, $value_index = 1);
 
@@ -2042,7 +2174,7 @@ interface DatabaseStatementInterface extends Traversable {
    *   set for the query will be used.
    *
    * @return
-   *   An associative array.
+   *   An associative array, or an empty array if there is no result set.
    */
   public function fetchAllAssoc($key, $fetch = NULL);
 }
@@ -2307,14 +2439,14 @@ function db_query_range($query, $from, $count, array $args = array(), array $opt
 }
 
 /**
- * Executes a query string and saves the result set to a temporary table.
+ * Executes a SELECT query string and saves the result set to a temporary table.
  *
  * The execution of the query string happens against the active database.
  *
  * @param $query
- *   The prepared statement query to run. Although it will accept both named and
- *   unnamed placeholders, named placeholders are strongly preferred as they are
- *   more self-documenting.
+ *   The prepared SELECT statement query to run. Although it will accept both
+ *   named and unnamed placeholders, named placeholders are strongly preferred
+ *   as they are more self-documenting.
  * @param $args
  *   An array of values to substitute into the query. If the query uses named
  *   placeholders, this is an associative array in any order. If the query uses
@@ -2628,7 +2760,7 @@ function db_condition($conjunction) {
 
 
 /**
- * @ingroup schemaapi
+ * @addtogroup schemaapi
  * @{
  */
 
@@ -2725,7 +2857,7 @@ function _db_create_keys_sql($spec) {
  * Renames a table.
  *
  * @param $table
- *   The table to be renamed.
+ *   The current name of the table to be renamed.
  * @param $new_name
  *   The new name for the table.
  */
@@ -2756,7 +2888,7 @@ function db_drop_table($table) {
  *   will be set to the value of the key in all rows. This is most useful for
  *   creating NOT NULL columns with no default value in existing tables.
  * @param $keys_new
- *   Optional keys and indexes specification to be created on the table along
+ *   (optional) Keys and indexes specification to be created on the table along
  *   with adding the field. The format is the same as a table specification, but
  *   without the 'fields' element. If you are adding a type 'serial' field, you
  *   MUST specify at least one key or index including it in this array. See
@@ -2936,7 +3068,7 @@ function db_drop_index($table, $name) {
  * @param $spec
  *   The field specification for the new field.
  * @param $keys_new
- *   Optional keys and indexes specification to be created on the table along
+ *   (optional) Keys and indexes specification to be created on the table along
  *   with changing the field. The format is the same as a table specification
  *   but without the 'fields' element.
  */
@@ -2945,7 +3077,7 @@ function db_change_field($table, $field, $field_new, $spec, $keys_new = array())
 }
 
 /**
- * @} End of "ingroup schemaapi".
+ * @} End of "addtogroup schemaapi".
  */
 
 /**

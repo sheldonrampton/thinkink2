@@ -24,7 +24,7 @@ function color_requirements($phase) {
         $requirements['color_gd']['severity'] = REQUIREMENT_OK;
       }
       else {
-        $requirements['color_gd']['severity'] = REQUIREMENT_ERROR;
+        $requirements['color_gd']['severity'] = REQUIREMENT_WARNING;
         $requirements['color_gd']['description'] = t('The GD library for PHP is enabled, but was compiled without PNG support. Check the <a href="@url">PHP image documentation</a> for information on how to correct this.', array('@url' => 'http://www.php.net/manual/ref.image.php'));
       }
     }
@@ -42,6 +42,11 @@ function color_requirements($phase) {
 }
 
 /**
+ * @addtogroup updates-7.x-extra
+ * @{
+ */
+
+/**
  * Warn site administrator if unsafe CSS color codes are found in the database.
  */
 function color_update_7001() {
@@ -55,3 +60,7 @@ function color_update_7001() {
     }
   }
 }
+
+/**
+ * @} End of "addtogroup updates-7.x-extra".
+ */
