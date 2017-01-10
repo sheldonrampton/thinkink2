@@ -85,7 +85,7 @@
           'alt' => '2819 Royal Avenue, Madison, WI 53719 . 608-251-7300 . Fax 608-251-2141 . www.thinkinkanddesign.com',
           'title' => '2819 Royal Avenue, Madison, WI 53719 . 608-251-7300 . Fax 608-251-2141 . www.thinkinkanddesign.com',
         )); ?><br />
-        <p>©2017 Think Ink &amp; Design</p>
+        <p>©<?php echo date("Y"); ?> Think Ink &amp; Design</p>
 
 
   </div>
