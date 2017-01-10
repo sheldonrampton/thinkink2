@@ -1,0 +1,5 @@
+The following contributed modules have been modified on this website:
+
+* views_slideshow (directory sites/all/modules/views_slideshow) has been modified to enable the use of images as slideshow play controllers. Some of the changes are in updated .tpl.php files inside the themes directory. The module patchfile is at:
+sites/all/modules/views_slideshow/fix-pause-play-controls-2012-01-08.patch
+

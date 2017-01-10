@@ -1,0 +1,13 @@
+name = Views Slideshow Xtra Example
+description = Create a Views Slideshow Xtra example content type and slide nodes.
+package = Views
+core = 7.x
+dependencies[] = image
+dependencies[] = devel
+
+; Information added by drupal.org packaging script on 2011-08-05
+version = "7.x-2.0-alpha5"
+core = "7.x"
+project = "views_slideshow_xtra"
+datestamp = "1312513920"
+

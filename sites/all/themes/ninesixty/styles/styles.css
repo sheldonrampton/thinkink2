@@ -1,0 +1,633 @@
+/* $Id: styles.css,v 1.1.2.2.2.1 2011/01/11 01:08:49 dvessel Exp $ */
+
+body.front #main {
+  margin-top: 30px;
+}
+
+body.page-portfolio-images {
+  background-color: #fff;
+}
+
+h1#site-name {
+  margin-bottom: 0;
+}
+
+#site-header,
+#site-subheader,
+#footer-region,
+.column,
+.node,
+.comment,
+.block {
+  margin-bottom: 1.5em;
+}
+
+ul.main-menu,
+ul.secondary-menu {
+  display: block;
+  margin: 0;
+  padding: 0;
+}
+
+#slideshow {
+  margin-top: 55px;
+}
+.leftko2 {
+  padding: 0 35px 35px 35px;
+  background-color: #ffffff;
+}
+.leftko2 p {
+  margin-right: 15px;
+}
+
+.rightko2 {
+  padding: 0 35px 35px 35px;
+  background-color: #ffffff;
+}
+.rightko2 p {
+  margin-right: 15px;
+}
+.headerko2 {
+  margin-left: 131px;
+  margin-bottom: -35px;
+}
+body { 
+  background-color: #000000;
+  color: #fff;
+}
+
+body.page-contactushtml .panels-flexible-row-inside-first {
+  color: #000000;
+}
+
+.orange-link {
+  margin-left: 150px;
+}
+
+.field-item {
+  margin-left; 210px
+}
+.field-item a {
+  color: #ff7000;
+}
+
+.panels-flexible-region-3-doormat {
+  background-color: #404041;
+  float: left;
+  height: 25px;
+  margin-left: 130px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  padding-left: 0;
+  text-align: center;
+  width: 702px;
+  margin-top: -6px;
+}
+
+.panels-flexible-region-3-doormat .inside {
+  display: inline-block;
+}
+
+
+body.not-front .region-footer {
+  background-color: #404041;
+  margin-left: 70px;
+  margin-top: 0;
+  padding-bottom: 3px;
+  padding-left: 0px;
+  padding-top: 5px;
+  width: 696px;
+  height: 25px;
+}
+
+body.front .region-footer {
+  background-color: #404041;
+  margin-left: 70px;
+  margin-top: 0;
+  padding-bottom: 9px;
+  padding-left: 0px;
+  padding-top: 9px;
+  width: 717px;
+  height: 25px;
+}
+
+.field-name-field-thinkink-logo img {
+  border: 0 none;
+  margin-left: 68px;
+  margin-top: 30px;
+}
+
+.region-footer #block-nice-menus-1 {
+  text-align: center;
+}
+.region-footer #block-nice-menus-1 .content {
+  display: inline-block;
+}
+
+.pane-nice-menus-1,
+#block-nice-menus-1 {
+  padding-top: 4px;
+}
+
+.ss-doormat a:link,
+.ss-doormat a:hover,
+.ss-doormat a:visited,
+.doormat a:link,
+.doormat a:hover,
+.doormat a:visited,
+.panels-flexible-region-3-doormat a:link,
+.panels-flexible-region-3-doormat a:hover,
+.panels-flexible-region-3-doormat a:visited,
+.region-footer a:link,
+.region-footer a:hover,
+.region-footer a:visited {
+  vertical-align: 2px;
+  color: #999999;
+  font-family: Verdana,Arial,Helvetica,sans-serif;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 800;
+  margin-left: 3px;
+  margin-right: 3px;
+}
+
+.doormat a:link,
+.ss-doormat a:link,
+.panels-flexible-region-3-doormat a:link,
+.region-footer a:link {
+  color: #FFFFFF;
+}
+
+.field-type-text-with-summary{
+  font-family: Verdana,Arial,Helvetica,sans-serif;
+  font-size: 11px;
+  line-height: 22px;
+}
+
+.doormat ul li,
+.ss-doormat ul li,
+.panels-flexible-region-3-doormat ul li,
+.region-footer ul li {
+  border-left: 1px solid #FFF;
+}
+
+.doormat ul,
+.ss-doormat ul,
+.panels-flexible-region-3-doormat ul,
+.region-footer ul {
+  -moz-padding-start: 0;
+}
+
+.doormat ul li:first-child,
+.ss-doormat ul li:first-child,
+.panels-flexible-region-3-doormat ul li:first-child,
+.region-footer ul li:first-child,
+.doormat ul.nice-menu li:first-child,
+.panels-flexible-region-3-doormat ul.nice-menu li:first-child,
+.region-footer ul.nice-menu li:first-child {
+  border: none;
+  border-width: 0 0 0;
+}
+
+ul.nice-menu li:first-child {
+  border-width: 0 0 0;
+}
+
+.doormat ul li:first-child a,
+.ss-doormat ul li:first-child a,
+.panels-flexible-region-3-doormat ul li:first-child a,
+.region-footer ul li:first-child a {
+  margin-left: 0;
+}
+
+/*nice menu*/
+ul.nice-menu li {
+  -moz-border-bottom-colors: none;
+  -moz-border-image: none;
+  -moz-border-left-colors: none;
+  -moz-border-right-colors: none;
+  -moz-border-top-colors: none;
+  border-width: 0 1px 1px;
+  float: left;
+}
+
+div#footer{
+  text-align: center;
+  background-color: #000000; 
+  height: 30px;
+  margin: 0;
+  padding: 0;
+  width: 840px;
+}
+div#footer p {
+  font-size: 80%;
+  color: #AAAAAA;
+}
+
+#footer img {
+  margin-left: 125px;
+}#footer p {
+  margin-left: 129px;
+}
+
+.not-front #footer p {
+  margin-left: 50px;
+}
+.not-front #footer img {
+  margin-left: 20px;
+  margin-top:  -20px;
+}
+
+.doormat #ss_footer {
+  background-color: #404041;
+  height: 22px;
+  margin-left: 0;
+  margin-top: 37px;
+  padding-bottom: 5px;
+  padding-left: 0;
+  padding-top: 5px;
+  text-align: center;
+  width: 693px;
+}
+
+.panels-flexible-region-4-messagebox-inside {
+  padding: 0 70px 35px 35px;
+  color:#000000;
+  background-color: #ffffff;
+  height:575px;
+}
+
+.panels-flexible-region-4-testimonial-inside {
+  padding: 0 30px 35px 35px;
+  background-color: #fff;
+  color:#000000;
+  height:575px;
+  width: 216px;
+  margin-left: -32px;
+}
+
+/* HOW TO FIND US -- node/7 */
+body.page-node-7 .panels-flexible-region-4-messagebox-inside {
+  padding: 0 75px 35px 0px;
+}
+body.page-node-7 .panels-flexible-column-first {
+  z-index: 10;
+}
+
+/* OUR PHILOSOPHY -- node/4 */
+body.page-node-4 .panels-flexible-region-4-messagebox-inside{
+  background-color: #00AED9;
+}
+
+/* PRINT SERVICE -- node/1 */
+body.page-node-1 .panels-flexible-region-4-messagebox-inside{
+  background-color: #FED100;
+}
+
+body.page-node-1 {
+  font-family:"Lucida Grande","bitstream vera sans","trebuchet ms",sans-serif,verdana;
+}
+
+/* get rid of those system borders being generated for A tags */
+body.page-node-1 a:active {
+  outline:none;
+}
+
+body.page-node-1 :focus {
+  -moz-outline-style:none;
+}
+
+/* WHAT'S HAPPENING -- node/3 */
+body.page-node-3 .panels-flexible-region-4-messagebox-inside{
+    background-color: #BC34BA;
+}
+
+/* FILE TRANSFER -- node/6 */
+body.page-node-6 .panels-flexible-region-4-messagebox-inside{
+  background-color: #ffffff;
+}
+body.page-node-6 .panels-flexible-region-4-messagebox-inside .field-name-field-article-image {
+  margin-left: -35px;
+}
+body.page-node-6 textarea {
+  resize: none;
+}
+
+/* DESIGN SERVICES -- node/2 */
+body.page-node-2 .panels-flexible-region-4-messagebox-inside {
+  background-color: #A2CE4D;
+}
+
+.field-name-field-testimonial{
+  color: #77787B;
+  font-family: Verdana,Arial,Helvetica,sans-serif;
+  font-size: 11px;
+  line-height: 27px;
+}
+
+.leftko2 .field-type-text-with-summary, .rightko2 .field-type-text-with-summary{
+  color: #000000;
+}
+
+.panels-flexible-region-4-messagebox {
+  margin-left: 20px;
+}
+
+label{
+  font-family: Verdana,Arial,Helvetica,sans-serif;
+  font-size: 11px;
+  line-height: 22px;
+  font-weight: normal;
+}
+
+.node-portfolio .views-field-field-image{
+  padding: 20px;
+  border: 1px solid #fff;
+  margin: 10px;
+  background-color: #fff;
+}
+
+.node-portfolio .views-field-title{
+  padding: 2px;
+  border: 1px solid #fff;
+  margin: 10px;
+  background-color: #fff;
+}
+
+.panels-flexible-row-portfolio{
+  background-color: #ffffff;
+  width: 693px; 
+  margin-top: -32px
+}
+
+.pane-portfolio {
+  padding-top: 12px;
+}
+
+.page-contactushtml #footer p,
+.page-portfoliohtml #footer p,
+.page-annualshtml #footer p,
+.page-brochureshtml #footer p,
+.page-dmhtml #footer p,
+.page-donorwallshtml #footer p,
+.page-invitationshtml #footer p,
+.page-logoshtml #footer p,
+.page-newslettershtml #footer p,
+.page-stationeryhtml #footer p,
+.page-websiteshtml #footer p
+{
+  margin-left: 108px;
+}
+
+.page-contactushtml #footer img,
+.page-portfoliohtml #footer img,
+.page-annualshtml #footer img,
+.page-brochureshtml #footer img,
+.page-dmhtml #footer img,
+.page-donorwallshtml #footer img,
+.page-invitationshtml #footer img,
+.page-logoshtml #footer img,
+.page-newslettershtml #footer img,
+.page-stationeryhtml #footer img,
+.page-websiteshtml #footer img
+{
+  margin-left: 87px;
+  margin-top: 0;
+}
+
+.ss-doormat {
+  background-color: #404041;
+  height: 27px;
+  margin-left: 0;
+  margin-top: 50px;
+  padding-bottom: 5px;
+  padding-left: 0px;
+  padding-top: 8px;
+  text-align: center;
+  width: 694px;
+}
+
+.doormat{
+  background-color: #404041;
+  height: 25px;
+  margin-left: 0;
+  margin-top: 200px;
+  padding-bottom: 5px;
+  padding-left: 0px;
+  padding-top: 5px;
+  text-align: center;
+  width: 100%;
+  width: 902px;
+}
+.doormat .inside {
+  display: inline-block;
+}
+
+div#nicemenuko{
+  margin-top: 50px;
+}
+
+div#nicemenuko ul.nice-menu a {
+  color: #000000;
+  text-decoration: none;
+  background: url('/images/bullet.gif') 0 2px no-repeat;
+  padding-left: 15px;
+}
+
+ul.nice-menu a {
+  display: inline;
+  padding: 0;
+}
+
+div#nicemenuko ul.nice-menu a:hover,
+div#nicemenuko ul.nice-menu a.active {
+  font-weight: 800;
+  background: url('/devsite/images/bullet-green.gif') 0 2px no-repeat;
+}
+
+div#nicemenuko ul.nice-menu {
+  color: black;
+  padding-left: 20px;
+  margin-left: 0px;
+}
+
+portfolio_right{
+  color: #000000;
+ 
+}
+
+.views-slideshow-controls-bottom {
+  color: #000000;
+  text-align: center;
+  margin-right: 160px;
+  font-size: 80%;
+}
+
+.views-slideshow-slide-counter,
+.views-slideshow-controls-text {
+  display: inline;
+}
+.views-slideshow-slide-counter {
+  margin-right: 60px;
+  vertical-align: 2px;
+  font-weight: bold;
+}
+
+.headerko2 img{
+  margin-bottom: 38px;
+  margin-left: 140px;
+}
+
+.intenttable {
+  padding-left: 3px;
+}
+
+table.twocolumn tbody {
+  border: 0;
+}
+
+h2 {
+  font-size: 15px;
+  margin-bottom: 0px;
+}
+
+.thinkinkboldsMedium {
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0px;
+}
+
+#social-icons {
+  margin-top: 3px;
+  text-align: right;
+  width: 840px;
+  position: absolute;
+}
+
+.views-slideshow-controls-text-previous a {
+  height: 13px;
+  width: 13px;
+}
+
+.views-slideshow-controls-text-pause a {
+  height: 13px;
+  width: 13px;
+}
+
+.views-slideshow-controls-text-next a {
+  height: 13px;
+  width: 13px;
+}
+
+table.cc-top {
+  height: 22px; 
+  width: 382px; 
+  margin-left: 100px; 
+  margin-bottom: 10px;
+}
+
+table.cc-bottom {
+  width: 577px; 
+  height: 22px;
+}
+
+
+tbody {
+  border-top: 0 none;
+}
+
+.page-contactushtml .pane-content{
+
+  border: medium none;
+}
+
+#contact-persons{
+  padding-left: 110px;
+}
+
+#contact-info{
+  margin-left: 50px;
+}
+
+
+table.cc-top .name{
+  margin-bottom: 0px;
+  margin-left: 3px;
+  color: #333333;
+  font-family: Verdana,Arial,Helvetica,sans-serif;
+  font-size: 12px;
+  line-height: 17px;
+  font-weight: 600;
+}
+
+table.cc-top tr img {
+  margin-top: 10px;
+}
+table.cc-bottom tr img {
+  margin-top: 20px;
+}
+table.cc-bottom .name {
+  margin-bottom: 0px;
+  margin-left: -4px;
+  color: #333333;
+  font-family: Verdana,Arial,Helvetica,sans-serif;
+  font-size: 12px;
+  line-height: 17px;
+  font-weight: 600;
+}
+
+table.cc-top .jobdescription{
+  font-size: 11px;
+  margin-bottom: -3px;
+  margin-left: 30px;
+}
+
+table.cc-bottom .jobdescription {
+  font-size: 11px;
+  margin-bottom: -3px;
+  margin-left: 7px;
+}
+
+table.cc-top .email a,
+table.cc-bottom .email a {
+  color: #00AED9;
+  font-size: 11px;
+  margin-bottom: 5px;
+  margin-left: -30px;
+}
+
+.maplinks {
+  margin-left: 40px;
+  width: 400px;
+  z-index: 10;
+}
+
+body.node-type-image #main,
+.webform-confirmation-wrapper {
+  margin-left: 83px;
+  padding: 20px 20px 20px 20px;
+  width: 654px;
+  background-color: #fff;
+  color: #000;
+}
+
+body.node-type-image #main #footer {
+  display: none;
+}
+.webform-confirmation-wrapper {
+  height:315px;
+}
+.webform-confirmation-wrapper .thinkink-logo {
+  text-align: right;
+  width: 100%;
+  margin-top: 10px;
+  margin-bottom: 100px;
+}
+
+p {
+  margin-bottom: 10px;
+}
+
+.pane-node-field-testimonial {
+  margin-top: 34px;
+}
